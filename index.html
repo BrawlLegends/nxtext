@@ -42,17 +42,17 @@
 
         .app-container {
             width: 100%;
-            max-width: 680px;
+            max-width: 720px;
             background: var(--bg-card);
             backdrop-filter: blur(16px);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 40px;
+            padding: 36px;
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
         }
 
         header {
-            margin-bottom: 32px;
+            margin-bottom: 28px;
             text-align: center;
         }
 
@@ -72,18 +72,27 @@
             font-weight: 400;
         }
 
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 24px;
+            gap: 8px;
+            margin-bottom: 20px;
         }
 
         .toggle-btn {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 8px 14px;
+            padding: 8px 12px;
             border-radius: 10px;
             font-size: 0.85rem;
             font-weight: 500;
@@ -106,19 +115,79 @@
             color: var(--accent);
         }
 
+        /* Colors Section */
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .color-swatch {
+            width: 100%;
+            height: 36px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+            z-index: 2;
+        }
+
+        .color-swatch.active {
+            border-color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .custom-color-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .custom-color-picker {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 32px;
+            height: 32px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .custom-color-picker::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .custom-color-picker::-webkit-color-swatch {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .custom-color-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
         .editor-group {
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .input-block {
-            position: relative;
-        }
-
         textarea {
             width: 100%;
-            height: 130px;
+            height: 120px;
             background: var(--bg-input);
             border: 1px solid var(--border);
             border-radius: 14px;
@@ -146,14 +215,13 @@
             background: var(--bg-input);
             border: 1px solid var(--border);
             border-radius: 14px;
-            min-height: 130px;
+            min-height: 120px;
             padding: 16px;
             padding-right: 120px;
             font-size: 1rem;
             line-height: 1.5;
             word-break: break-word;
             white-space: pre-wrap;
-            transition: border-color 0.2s ease;
         }
 
         .copy-btn {
@@ -176,10 +244,6 @@
             transform: translateY(-1px);
         }
 
-        .copy-btn:active {
-            transform: translateY(0);
-        }
-
         /* Formatting classes */
         .preview-bold { font-weight: 600; }
         .preview-italic { font-style: italic; }
@@ -193,9 +257,10 @@
 <div class="app-container">
     <header>
         <h1>n8x text</h1>
-        <p>Минималистичный генератор шрифта Minecraft</p>
+        <p>Генератор кастомного текста и цветов для Minecraft</p>
     </header>
 
+    <div class="section-title">Форматирование</div>
     <div class="controls">
         <div class="toggle-btn" id="btn-bold" onclick="toggleOption('bold')">
             <b>B</b> Жирный
@@ -214,10 +279,16 @@
         </div>
     </div>
 
+    <div class="section-title">Цвета Minecraft</div>
+    <div class="color-palette" id="mc-colors"></div>
+
+    <div class="custom-color-wrapper">
+        <input type="color" id="customColorPicker" class="custom-color-picker" value="#38bdf8" oninput="selectCustomColor(this.value)">
+        <span class="custom-color-text" id="customColorLabel">Свой цвет (HEX/RGB): Нажмите на иконку</span>
+    </div>
+
     <div class="editor-group">
-        <div class="input-block">
-            <textarea id="input-text" placeholder="Введите ваш текст..." oninput="convertText()"></textarea>
-        </div>
+        <textarea id="input-text" placeholder="Введите ваш текст..." oninput="convertText()"></textarea>
 
         <div class="output-block" id="output-text">
             <button class="copy-btn" onclick="copyResult()">Копировать</button>
@@ -232,8 +303,30 @@
         italic: false,
         underline: false,
         strikethrough: false,
-        'mc-code': false
+        'mc-code': true
     };
+
+    let selectedColor = null; // { type: 'mc'|'hex', code: '&c', hex: '#ff5555' }
+
+    // Все 16 классических цветов Minecraft
+    const mcColors = [
+        { code: '&0', hex: '#000000', name: 'Черный' },
+        { code: '&1', hex: '#0000AA', name: 'Темно-синий' },
+        { code: '&2', hex: '#00AA00', name: 'Темно-зеленый' },
+        { code: '&3', hex: '#00AAAA', name: 'Темно-бирюзовый' },
+        { code: '&4', hex: '#AA0000', name: 'Темно-красный' },
+        { code: '&5', hex: '#AA00AA', name: 'Фиолетовый' },
+        { code: '&6', hex: '#FFAA00', name: 'Золотой' },
+        { code: '&7', hex: '#AAAAAA', name: 'Серый' },
+        { code: '&8', hex: '#555555', name: 'Темно-серый' },
+        { code: '&9', hex: '#5555FF', name: 'Синий' },
+        { code: '&a', hex: '#55FF55', name: 'Зеленый' },
+        { code: '&b', hex: '#55FFFF', name: 'Голубой' },
+        { code: '&c', hex: '#FF5555', name: 'Красный' },
+        { code: '&d', hex: '#FF55FF', name: 'Розовый' },
+        { code: '&e', hex: '#FFFF55', name: 'Желтый' },
+        { code: '&f', hex: '#FFFFFF', name: 'Белый' }
+    ];
 
     const charMap = {
         // Русские шрифты[cite: 1]
@@ -242,7 +335,6 @@
         'н': 'н', 'о': 'о', 'п': 'п', 'р': 'ᴘ', 'с': 'с', 'т': 'т', 'у': 'у',
         'ф': 'ф', 'х': 'х', 'ц': 'ц', 'ч': 'ч', 'ш': 'ш', 'щ': 'щ', 'ъ': 'ъ',
         'ы': 'ы', 'ь': 'ь', 'э': 'э', 'ю': 'ю', 'я': 'я',
-        
         'А': 'ᴀ', 'Б': 'ҕ', 'В': 'в', 'Г': 'г', 'Д': 'д', 'Е': 'ᴇ', 'Ё': 'ᴇ',
         'Ж': 'ж', 'З': 'ɜ', 'И': 'и', 'Й': 'й', 'К': 'ᴋ', 'Л': 'л', 'М': 'м',
         'Н': 'н', 'О': 'о', 'П': 'п', 'Р': 'ᴘ', 'С': 'с', 'Т': 'т', 'У': 'у',
@@ -254,12 +346,47 @@
         'h': 'ʜ', 'i': 'ɪ', 'j': 'ᴊ', 'k': 'ᴋ', 'l': 'ʟ', 'm': 'ᴍ', 'n': 'ɴ',
         'o': 'ᴏ', 'p': 'ᴘ', 'q': 'ǫ', 'r': 'ʀ', 's': 'ѕ', 't': 'ᴛ', 'u': 'ᴜ',
         'v': 'ᴠ', 'w': 'ᴡ', 'x': 'x', 'y': 'ʏ', 'z': 'ᴢ',
-
         'A': 'ᴀ', 'B': 'ʙ', 'C': 'ᴄ', 'D': 'ᴅ', 'E': 'ᴇ', 'F': 'ꜰ', 'G': 'ɢ',
         'H': 'ʜ', 'I': 'ɪ', 'J': 'ᴊ', 'K': 'ᴋ', 'L': 'ʟ', 'M': 'ᴍ', 'N': 'ɴ',
         'O': 'ᴏ', 'P': 'ᴘ', 'Q': 'ǫ', 'R': 'ʀ', 'S': 'ѕ', 'T': 'ᴛ', 'U': 'ᴜ',
         'V': 'ᴠ', 'W': 'ᴡ', 'X': 'x', 'Y': 'ʏ', 'Z': 'ᴢ'
     };
+
+    // Отрисовка стандартных палитр
+    function initPalette() {
+        const container = document.getElementById('mc-colors');
+        mcColors.forEach((color, index) => {
+            const swatch = document.createElement('div');
+            swatch.className = 'color-swatch';
+            swatch.style.backgroundColor = color.hex;
+            swatch.title = `${color.name} (${color.code})`;
+            swatch.onclick = () => selectMcColor(index, swatch);
+            container.appendChild(swatch);
+        });
+
+        // По умолчанию активны MC-коды
+        document.getElementById('btn-mc-code').classList.add('active');
+    }
+
+    function clearActiveColors() {
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    }
+
+    function selectMcColor(index, element) {
+        clearActiveColors();
+        element.classList.add('active');
+        const color = mcColors[index];
+        selectedColor = { type: 'mc', code: color.code, hex: color.hex };
+        document.getElementById('customColorLabel').innerText = `Свой цвет (HEX/RGB): Нажмите на иконку`;
+        convertText();
+    }
+
+    function selectCustomColor(hex) {
+        clearActiveColors();
+        selectedColor = { type: 'hex', code: `&#${hex.replace('#', '')}`, hex: hex };
+        document.getElementById('customColorLabel').innerText = `Выбран свой цвет: ${hex.toUpperCase()} (${selectedColor.code})`;
+        convertText();
+    }
 
     function toggleOption(opt) {
         options[opt] = !options[opt];
@@ -276,7 +403,9 @@
         }
 
         let prefix = '';
+
         if (options['mc-code']) {
+            if (selectedColor) prefix += selectedColor.code;
             if (options.bold) prefix += '&l';
             if (options.italic) prefix += '&o';
             if (options.underline) prefix += '&n';
@@ -286,8 +415,10 @@
         const outputBlock = document.getElementById('output-text');
         const outputContent = document.getElementById('output-content');
 
-        // Сброс и добавление классов предпросмотра
+        // Сброс и применение визуального стиля
         outputBlock.className = 'output-block';
+        outputContent.style.color = selectedColor ? selectedColor.hex : 'inherit';
+
         if (options.bold) outputBlock.classList.add('preview-bold');
         if (options.italic) outputBlock.classList.add('preview-italic');
         if (options.underline) outputBlock.classList.add('preview-underline');
@@ -313,6 +444,8 @@
             }, 1500);
         });
     }
+
+    initPalette();
 </script>
 
 </body>
