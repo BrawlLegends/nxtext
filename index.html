@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8x text</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #090d16;
+            --bg-card: rgba(18, 26, 43, 0.6);
+            --bg-input: rgba(13, 19, 33, 0.8);
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.15);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(56, 189, 248, 0.3);
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(15, 23, 42, 0.5) 0%, transparent 50%);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 680px;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        header {
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+        }
+
+        .toggle-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text-main);
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .editor-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .input-block {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            height: 130px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .output-block {
+            position: relative;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            min-height: 130px;
+            padding: 16px;
+            padding-right: 120px;
+            font-size: 1rem;
+            line-height: 1.5;
+            word-break: break-word;
+            white-space: pre-wrap;
+            transition: border-color 0.2s ease;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: var(--accent);
+            color: #040810;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Formatting classes */
+        .preview-bold { font-weight: 600; }
+        .preview-italic { font-style: italic; }
+        .preview-underline { text-decoration: underline; }
+        .preview-strikethrough { text-decoration: line-through; }
+        .preview-underline.preview-strikethrough { text-decoration: underline line-through; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>n8x text</h1>
+        <p>Минималистичный генератор шрифта Minecraft</p>
+    </header>
+
+    <div class="controls">
+        <div class="toggle-btn" id="btn-bold" onclick="toggleOption('bold')">
+            <b>B</b> Жирный
+        </div>
+        <div class="toggle-btn" id="btn-italic" onclick="toggleOption('italic')">
+            <i>I</i> Курсив
+        </div>
+        <div class="toggle-btn" id="btn-underline" onclick="toggleOption('underline')">
+            <u>U</u> Подчеркнутый
+        </div>
+        <div class="toggle-btn" id="btn-strikethrough" onclick="toggleOption('strikethrough')">
+            <s>S</s> Зачеркнутый
+        </div>
+        <div class="toggle-btn" id="btn-mc-code" onclick="toggleOption('mc-code')">
+            & Коды Minecraft
+        </div>
+    </div>
+
+    <div class="editor-group">
+        <div class="input-block">
+            <textarea id="input-text" placeholder="Введите ваш текст..." oninput="convertText()"></textarea>
+        </div>
+
+        <div class="output-block" id="output-text">
+            <button class="copy-btn" onclick="copyResult()">Копировать</button>
+            <span id="output-content"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const options = {
+        bold: false,
+        italic: false,
+        underline: false,
+        strikethrough: false,
+        'mc-code': false
+    };
+
+    const charMap = {
+        // Русские шрифты[cite: 1]
+        'а': 'ᴀ', 'б': 'ҕ', 'в': 'в', 'г': 'г', 'д': 'д', 'е': 'ᴇ', 'ё': 'ᴇ',
+        'ж': 'ж', 'з': 'ɜ', 'и': 'и', 'й': 'й', 'к': 'ᴋ', 'л': 'л', 'м': 'м',
+        'н': 'н', 'о': 'о', 'п': 'п', 'р': 'ᴘ', 'с': 'с', 'т': 'т', 'у': 'у',
+        'ф': 'ф', 'х': 'х', 'ц': 'ц', 'ч': 'ч', 'ш': 'ш', 'щ': 'щ', 'ъ': 'ъ',
+        'ы': 'ы', 'ь': 'ь', 'э': 'э', 'ю': 'ю', 'я': 'я',
+        
+        'А': 'ᴀ', 'Б': 'ҕ', 'В': 'в', 'Г': 'г', 'Д': 'д', 'Е': 'ᴇ', 'Ё': 'ᴇ',
+        'Ж': 'ж', 'З': 'ɜ', 'И': 'и', 'Й': 'й', 'К': 'ᴋ', 'Л': 'л', 'М': 'м',
+        'Н': 'н', 'О': 'о', 'П': 'п', 'Р': 'ᴘ', 'С': 'с', 'Т': 'т', 'У': 'у',
+        'Ф': 'ф', 'Х': 'х', 'Ц': 'ц', 'Ч': 'ч', 'Ш': 'ш', 'Щ': 'щ', 'Ъ': 'ъ',
+        'Ы': 'ы', 'Ь': 'ь', 'Э': 'э', 'Ю': 'ю', 'Я': 'я',
+
+        // Английские шрифты[cite: 1]
+        'a': 'ᴀ', 'b': 'ʙ', 'c': 'ᴄ', 'd': 'ᴅ', 'e': 'ᴇ', 'f': 'ꜰ', 'g': 'ɢ',
+        'h': 'ʜ', 'i': 'ɪ', 'j': 'ᴊ', 'k': 'ᴋ', 'l': 'ʟ', 'm': 'ᴍ', 'n': 'ɴ',
+        'o': 'ᴏ', 'p': 'ᴘ', 'q': 'ǫ', 'r': 'ʀ', 's': 'ѕ', 't': 'ᴛ', 'u': 'ᴜ',
+        'v': 'ᴠ', 'w': 'ᴡ', 'x': 'x', 'y': 'ʏ', 'z': 'ᴢ',
+
+        'A': 'ᴀ', 'B': 'ʙ', 'C': 'ᴄ', 'D': 'ᴅ', 'E': 'ᴇ', 'F': 'ꜰ', 'G': 'ɢ',
+        'H': 'ʜ', 'I': 'ɪ', 'J': 'ᴊ', 'K': 'ᴋ', 'L': 'ʟ', 'M': 'ᴍ', 'N': 'ɴ',
+        'O': 'ᴏ', 'P': 'ᴘ', 'Q': 'ǫ', 'R': 'ʀ', 'S': 'ѕ', 'T': 'ᴛ', 'U': 'ᴜ',
+        'V': 'ᴠ', 'W': 'ᴡ', 'X': 'x', 'Y': 'ʏ', 'Z': 'ᴢ'
+    };
+
+    function toggleOption(opt) {
+        options[opt] = !options[opt];
+        document.getElementById(`btn-${opt}`).classList.toggle('active', options[opt]);
+        convertText();
+    }
+
+    function convertText() {
+        const input = document.getElementById('input-text').value;
+        let converted = '';
+
+        for (let char of input) {
+            converted += charMap[char] || char;
+        }
+
+        let prefix = '';
+        if (options['mc-code']) {
+            if (options.bold) prefix += '&l';
+            if (options.italic) prefix += '&o';
+            if (options.underline) prefix += '&n';
+            if (options.strikethrough) prefix += '&m';
+        }
+
+        const outputBlock = document.getElementById('output-text');
+        const outputContent = document.getElementById('output-content');
+
+        // Сброс и добавление классов предпросмотра
+        outputBlock.className = 'output-block';
+        if (options.bold) outputBlock.classList.add('preview-bold');
+        if (options.italic) outputBlock.classList.add('preview-italic');
+        if (options.underline) outputBlock.classList.add('preview-underline');
+        if (options.strikethrough) outputBlock.classList.add('preview-strikethrough');
+
+        outputContent.innerText = prefix + converted;
+    }
+
+    function copyResult() {
+        const text = document.getElementById('output-content').innerText;
+        if (!text) return;
+
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.innerText = 'Успешно!';
+            btn.style.background = '#22c55e';
+            btn.style.color = '#fff';
+
+            setTimeout(() => {
+                btn.innerText = 'Копировать';
+                btn.style.background = 'var(--accent)';
+                btn.style.color = '#040810';
+            }, 1500);
+        });
+    }
+</script>
+
+</body>
+</html>
